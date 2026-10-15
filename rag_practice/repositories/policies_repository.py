@@ -9,6 +9,7 @@ class PoliciesRepository:
         self._logger = Logger(__name__)
         self._vector_db = ChromaDB(cfg)
         self._collection_name = cfg.COLLECTION_NAME
+        self._default_top_k = cfg.TOP_K
         _has_collection = self._vector_db.collection_exists(self._collection_name)
         if _has_collection:
             self._collection = self._vector_db.get_collection(self._collection_name)
@@ -22,8 +23,10 @@ class PoliciesRepository:
         self._collection.add(ids=[id], documents=[policy_text], metadatas=metadata)
         self._logger.info("Policy added to vector database")
 
-    def search_policies(self, query: str, k: int = 5) -> list | None:
+    def search_policies(self, query: str, k: int | None = None) -> list | None:
         """Search for relevant policies based on a query."""
+        if k is None:
+            k = self._default_top_k
         results = self._collection.query(
             query_texts=[query], n_results=k, include=["documents"]
         )

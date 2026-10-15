@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 class Config:
     COLLECTION_NAME = "policies"
     DATA_PATH = "data"
-    CHROMA_PATH = "chroma_db"
+    CHROMA_PATH = "chroma"
     TOP_K = 4
     AI_MODEL = "qwen/qwen3-max:free"
     EMBEDDING_MODEL = "nvidia/nemotron-3-embed-1b:free"
