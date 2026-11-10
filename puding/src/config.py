@@ -3,12 +3,13 @@ from pathlib import Path
 from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASE_DIR = Path(__file__).resolve().parents[1]  # project root
+BASE_DIR = Path(__file__).resolve().parents[1]
+CFG_DIR = BASE_DIR / ".puding"
+
+# project root
 PROMPTS_DIR = BASE_DIR / "prompts"
 SKILLS_DIR = BASE_DIR / "skills"
-DB_DIR = BASE_DIR / "db"
-
-TOKENS_DB = DB_DIR / "tokens.db"
+DB_DIR = CFG_DIR / "db"
 
 
 class Settings(BaseSettings):
