@@ -16,7 +16,7 @@
 
   **Note:** Some type errors from dynamic LLM/HTTP APIs may be expected. Focus on obvious issues rather than blocking for third-party library integration errors.
 
-- **Commit on completion.** When a task is finished, commit the changes with a clear message and push if appropriate.
+- **Commit on completion.** When a task is finished, commit the changes with a clear message and push if appropriate in the current branch no merge to main.
 
 ## Overview
 
