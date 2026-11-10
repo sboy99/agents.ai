@@ -124,14 +124,21 @@ class MCPManager:
                 self._client = None
 
     async def get_tool(self, name: str):
-        logger.debug("MCP: Requesting tool '%s'", name)
+        logger.info("🔍 <mcp> tool '%s' ready", name)
         await self.start()
         if name not in self._tools:
             raise RuntimeError(
                 f"MCP tool '{name}' not found. Available: {list(self._tools)}"
             )
-        logger.debug("MCP: Returning tool '%s'", name)
         return self._tools[name]
+
+    async def ainvoke_with_logging(self, name: str, args: dict):
+        """Invoke an MCP tool with logging before and after execution."""
+        logger.info(f"<mcp> calling {name} with args: {args}")
+        tool = await self.get_tool(name)
+        result = await tool.ainvoke(args)
+        logger.info(f"<mcp> {name} completed")
+        return result
 
     async def _ensure_token(self, name, oauth, stored) -> str:
         logger.debug("MCP: Ensuring token for '%s'", name)

@@ -1,7 +1,9 @@
+import asyncio
 import logging
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from ..services.prompt_builder import load_prompt
@@ -89,3 +91,53 @@ async def move_task(identifier: str, payload: MoveIn, thread_id: str = Query(...
         raise HTTPException(404, f"Task {identifier} not found")
     logger.debug("TASKS: Task %s status updated to %s", identifier, payload.status)
     return {"task": updated}
+
+
+@router.get("/{identifier}/logs")
+async def get_task_logs(identifier: str, thread_id: str = Query(...), limit: int = 100):
+    """Get recent logs for a task (polling fallback)."""
+    logger.debug(
+        "TASKS: GET /tasks/%s/logs - thread_id=%s, limit=%s",
+        identifier,
+        thread_id,
+        limit,
+    )
+    return {"logs": await task_store.get_logs(thread_id, limit)}
+
+
+@router.get("/stream/{thread_id}")
+async def stream_task_logs(request: Request, thread_id: str = Query(...)):
+    """Stream logs for a thread as Server-Sent Events.
+
+    Usage:
+        curl -N http://localhost:8000/tasks/stream/{thread_id}
+    """
+    logger.debug("TASKS: GET /tasks/stream/%s - thread_id=%s", "stream", thread_id)
+
+    async def event_generator():
+        try:
+            async for sse in task_store.stream_logs(thread_id):
+                # Check if client disconnected
+                if await request.is_disconnected():
+                    logger.debug(
+                        "TASKS: Client disconnected from stream for thread_id=%s",
+                        thread_id,
+                    )
+                    break
+                yield sse
+        except asyncio.CancelledError:
+            # Client disconnected, no need to log
+            raise
+        except (ValueError, OSError, RuntimeError) as e:
+            # Log common error types for debugging
+            logger.warning("TASKS: Stream error for thread_id=%s: %s", thread_id, e)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        },
+    )
