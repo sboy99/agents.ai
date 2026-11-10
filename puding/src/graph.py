@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 import logging
 
 import aiosqlite
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
-from .config import STATE_DB
+from .config import DB_DIR
 from .nodes.analyze import analyze
 from .nodes.clarify import clarify
 from .nodes.generate_tickets import generate_tickets
@@ -15,10 +18,13 @@ from .nodes.research import research
 from .nodes.write_spec import write_spec
 from .types import ProductState
 
+STATE_DB = DB_DIR / "state.db"
 logger = logging.getLogger(__name__)
 
 
-async def build_graph():
+async def build_graph() -> tuple[
+    CompiledStateGraph[ProductState], aiosqlite.Connection
+]:
     logger.debug("GRAPH: Building LangGraph state machine")
     # Async SQLite checkpointer — durable across restarts
     logger.debug("GRAPH: Connecting to SQLite checkpointer at %s", STATE_DB)
@@ -61,7 +67,7 @@ async def build_graph():
     return compiled, conn
 
 
-async def pending_questions(result):
+async def pending_questions(result) -> list[dict]:
     """Extract pending clarification questions from an invoke() result."""
     logger.debug("PENDING_QUESTIONS: Extracting pending questions from result")
     if not isinstance(result, dict):

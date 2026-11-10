@@ -9,7 +9,6 @@ SKILLS_DIR = BASE_DIR / "skills"
 DB_DIR = BASE_DIR / "db"
 
 TOKENS_DB = DB_DIR / "tokens.db"
-STATE_DB = DB_DIR / "state.db"
 
 
 class Settings(BaseSettings):

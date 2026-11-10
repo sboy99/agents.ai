@@ -4,8 +4,9 @@ import time
 
 import aiosqlite
 
-from ..config import TOKENS_DB
+from ..config import DB_DIR
 
+TOKENS_DB = DB_DIR / "tokens.db"
 logger = logging.getLogger(__name__)
 
 
