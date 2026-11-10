@@ -3,6 +3,8 @@ import json
 import logging
 import time
 import uuid
+from collections import deque
+from collections.abc import AsyncGenerator
 
 import aiosqlite
 
@@ -13,11 +15,27 @@ logger = logging.getLogger(__name__)
 TASKS_DB = DB_DIR / "tasks.db"
 
 
+class LogEntry:
+    """Represents a single log entry for SSE streaming."""
+
+    def __init__(self, level: str, message: str, timestamp: float | None = None):
+        self.level = level
+        self.message = message
+        self.timestamp = timestamp or time.time()
+
+    def to_sse(self) -> str:
+        """Format as Server-Sent Event."""
+        return f"event: log\nid: {int(self.timestamp * 1000)}\ndata: {json.dumps(self.__dict__)}\n\n"
+
+
 class TaskStore:
     def __init__(self, path=TASKS_DB):
         self.path = str(path)
         self._db: aiosqlite.Connection | None = None
         self._lock = asyncio.Lock()
+        # In-memory circular buffer for recent logs per thread (for SSE streaming)
+        self._log_buffers: dict[str, deque] = {}
+        self._log_subscribers: dict[str, asyncio.Queue] = {}
 
     async def start(self) -> None:
         logger.debug("TaskStore: Acquiring lock for DB connection")
@@ -50,6 +68,13 @@ class TaskStore:
             )
             await self._db.commit()
             logger.debug("TaskStore: DB initialized successfully")
+
+    def _ensure_thread_buffers(self, thread_id: str):
+        """Ensure log buffer and subscriber exist for a thread."""
+        if thread_id not in self._log_buffers:
+            self._log_buffers[thread_id] = deque(maxlen=1000)  # Keep last 1000 logs
+        if thread_id not in self._log_subscribers:
+            self._log_subscribers[thread_id] = asyncio.Queue()
 
     async def create_many(self, thread_id: str, tickets: list[dict]) -> None:
         logger.debug(
@@ -169,6 +194,73 @@ class TaskStore:
             if self._db is not None:
                 await self._db.close()
                 self._db = None
+            # Clear all buffers and subscribers
+            self._log_buffers.clear()
+            for queue in self._log_subscribers.values():
+                while not queue.empty():
+                    queue.get_nowait()
+
+    def emit_log(self, thread_id: str, level: str, message: str) -> None:
+        """Emit a log entry for a thread (for SSE streaming).
+
+        Args:
+            thread_id: The thread ID to emit the log for
+            level: Log level (INFO, DEBUG, WARNING, ERROR)
+            message: The log message
+        """
+        entry = LogEntry(level, message)
+        self._ensure_thread_buffers(thread_id)
+
+        # Add to circular buffer
+        self._log_buffers[thread_id].append(entry)
+
+        # Notify subscribers via queue
+        if thread_id in self._log_subscribers:
+            self._log_subscribers[thread_id].put_nowait(entry)
+
+    async def stream_logs(self, thread_id: str) -> AsyncGenerator[str, None]:
+        """Stream logs for a thread as Server-Sent Events.
+
+        First yields all buffered logs, then waits for new logs.
+
+        Args:
+            thread_id: The thread ID to stream logs for
+
+        Yields:
+            SSE-formatted log entries
+        """
+        self._ensure_thread_buffers(thread_id)
+
+        # First, yield all buffered logs
+        for entry in self._log_buffers[thread_id]:
+            yield entry.to_sse()
+
+        # Then, wait for new logs
+        queue = self._log_subscribers[thread_id]
+        while True:
+            try:
+                entry = await asyncio.wait_for(queue.get(), timeout=30.0)
+                yield entry.to_sse()
+            except TimeoutError:
+                # Keep the connection alive with a comment
+                yield ": keep-alive\n\n"
+
+    async def get_logs(self, thread_id: str, limit: int = 100) -> list[dict]:
+        """Get recent logs for a thread (for polling fallback).
+
+        Args:
+            thread_id: The thread ID to get logs for
+            limit: Maximum number of logs to return
+
+        Returns:
+            List of log entry dicts
+        """
+        self._ensure_thread_buffers(thread_id)
+        buffer = self._log_buffers.get(thread_id, deque())
+        return [
+            {"timestamp": e.timestamp, "level": e.level, "message": e.message}
+            for e in list(buffer)[-limit:]
+        ]
 
     @staticmethod
     def _row_to_dict(r: aiosqlite.Row) -> dict:

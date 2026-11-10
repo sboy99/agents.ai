@@ -8,11 +8,13 @@ from typing import cast
 from ..services.llm import get_llm
 from ..services.prompt_builder import load_prompt
 from ..types import Docs, Phase, ProductState
+from .logging_utils import log_phase
 
 logger = logging.getLogger(__name__)
 
 
 async def write_spec(state: ProductState) -> ProductState:
+    log_phase("Spec", "Generating HLD/LLD with Mermaid diagrams")
     logger.debug("WRITE_SPEC: Starting spec generation phase")
     llm = get_llm()
 

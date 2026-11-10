@@ -10,6 +10,7 @@ from ..services.llm import get_llm
 from ..services.prompt_builder import load_prompt
 from ..services.task_store import task_store
 from ..types import Phase, ProductState, TicketList
+from .logging_utils import log_phase
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ def _excerpt_for(lld: str, area: str) -> str:
 
 
 async def generate_tickets(state: ProductState) -> ProductState:
+    log_phase("Tickets", "Generating implementation tickets")
     logger.debug("GENERATE_TICKETS: Starting ticket generation")
     llm = get_llm()
     logger.debug("GENERATE_TICKETS: Calling LLM with structured output for TicketList")
@@ -96,18 +98,19 @@ async def generate_tickets(state: ProductState) -> ProductState:
 
     if issue_create:
         logger.debug("GENERATE_TICKETS: Creating %d issues in Linear", len(tickets))
-        for t in tickets:
+        for ticket in tickets:
             try:
-                await issue_create.ainvoke(
-                    {"title": t["title"], "description": t["prd"]}
+                await mcp.ainvoke_with_logging(
+                    "issueCreate",
+                    {"title": ticket["title"], "description": ticket["prd"]},
                 )
                 logger.debug(
-                    "GENERATE_TICKETS: Created Linear issue %s", t["identifier"]
+                    "GENERATE_TICKETS: Created Linear issue %s", ticket["identifier"]
                 )
             except (RuntimeError, ToolException, ValueError) as exc:
                 logger.warning(
                     "GENERATE_TICKETS: Linear create failed for %s: %s",
-                    t["identifier"],
+                    ticket["identifier"],
                     exc,
                 )
 

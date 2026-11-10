@@ -5,6 +5,7 @@ import logging
 from langgraph.types import interrupt
 
 from ..types import Phase, ProductState
+from .logging_utils import log_phase
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ async def clarify(state: ProductState) -> ProductState:
         logger.debug("CLARIFY: No pending questions, proceeding to analyze")
         return {"pending_questions": [], "phase": Phase.PLANNED}
 
+    log_phase("Clarify", f"Asking {len(pending)} clarifying questions")
     logger.debug("CLARIFY: Sending %d questions to user via interrupt", len(pending))
     # GRAPH PAUSES HERE. The API/CLI resumes with the user's answers.
     replies = interrupt({"type": "clarification", "questions": pending})

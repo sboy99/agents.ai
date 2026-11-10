@@ -4,6 +4,7 @@ from typing import Any
 
 from ..mcp.client import mcp
 from ..types import Docs, Phase, ProductState
+from .logging_utils import log_phase
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,7 @@ def _extract_page_id(resp: Any) -> str | None:
 
 
 async def publish_notion(state: ProductState) -> ProductState:
+    log_phase("Notion", "Publishing spec to Notion")
     logger.debug("PUBLISH_NOTION: Starting Notion publication")
     # Best-effort Notion publish; don't fail the graph if MCP unavailable
     try:

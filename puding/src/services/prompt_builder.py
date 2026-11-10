@@ -4,7 +4,7 @@ logger = logging.getLogger(__name__)
 
 from ..config import PROMPTS_DIR
 
-_cache = {}
+_cache: dict = {}
 
 
 def load_prompt(name: str) -> str:

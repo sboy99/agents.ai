@@ -7,11 +7,13 @@ from typing import cast
 from ..services.llm import get_llm
 from ..services.prompt_builder import load_prompt
 from ..types import Phase, ProductState, Scorecard
+from .logging_utils import log_phase
 
 logger = logging.getLogger(__name__)
 
 
 async def analyze(state: ProductState) -> ProductState:
+    log_phase("Analysis", "Risk scoring and go/no-go decision")
     logger.debug("ANALYZE: Starting analysis phase")
     if not state.get("research"):
         logger.debug("ANALYZE: No research data found, returning empty scorecard")

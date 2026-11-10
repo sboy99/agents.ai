@@ -7,6 +7,7 @@ from ..mcp.client import mcp
 from ..services.llm import get_llm
 from ..services.prompt_builder import load_prompt
 from ..types import Phase, ProductState, ResearchDossier
+from .logging_utils import log_mcp_tool_call, log_phase
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ def _extract_results(resp: Any) -> list:
 
 
 async def research(state: ProductState) -> ProductState:
+    log_phase("Research", "Market research via Tavily search")
     logger.debug("RESEARCH: Starting research phase")
     idea = state.get("idea", "")
     queries = [
@@ -62,11 +64,11 @@ async def research(state: ProductState) -> ProductState:
     for q in queries:
         logger.debug("RESEARCH: Query: %s", q)
 
-    search = await mcp.get_tool("tavily_search")
-    logger.debug("RESEARCH: Retrieved tavily_search tool from MCP")
-
     async def run(q) -> list:
-        resp = await search.ainvoke({"query": q, "max_results": 4})
+        log_mcp_tool_call("tavily_search", {"query": q, "max_results": 4})
+        resp = await mcp.ainvoke_with_logging(
+            "tavily_search", {"query": q, "max_results": 4}
+        )
         results = _extract_results(resp)
         logger.debug("RESEARCH: Query '%s' returned %d results", q, len(results))
         return results
