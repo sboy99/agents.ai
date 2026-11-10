@@ -1,9 +1,18 @@
 {
   "mcp": {
     "servers": {
-      "context7": {
-        "type": "remote",
-        "url": "https://mcp.context7.com/mcp"
+      "linear": {
+        "type": "local",
+        "command": ["npx", "-y", "mcp-remote", "https://mcp.linear.app/mcp"]
+      },
+      "notion": {
+        "type": "local",
+        "command": ["npx", "-y", "mcp-remote", "https://mcp.notion.com/mcp"],
+        "disabled": true
+      },
+      "exa": {
+        "type": "local",
+        "command": ["npx", "-y", "mcp-remote", "https://mcp.exa.ai/mcp"]
       }
     }
   }

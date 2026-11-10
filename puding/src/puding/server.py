@@ -18,7 +18,7 @@ from ..config import settings
 
 def main():
     uvicorn.run(
-        "src.main:app",
+        "src.api:app",
         host=settings.app_host,
         port=settings.app_port,
         reload=True,
