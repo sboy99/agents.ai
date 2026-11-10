@@ -3,6 +3,17 @@
 ## Operating Instructions
 
 - **Plan before executing.** Before making any changes, lay out the plan: what to change, why, and how. Present it to the user and proceed only after approval.
+- **Format and lint after coding.** When code changes are done, always run the formatter and linter to fix issues before considering the task complete:
+  ```bash
+  uv run ruff format src/ tests/
+  uv run ruff check --fix src/ tests/
+  ```
+- **Check types.** Always run the type checker after formatting/linting to catch type errors:
+  ```bash
+  uv run mypy src/
+  ```
+  **Note:** Some type errors from dynamic LLM/HTTP APIs may be expected. Focus on obvious issues rather than blocking for third-party library integration errors.
+
 - **Commit on completion.** When a task is finished, commit the changes with a clear message and push if appropriate.
 
 ## Overview
