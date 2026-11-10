@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Any
 
@@ -63,6 +64,11 @@ async def publish_notion(state: ProductState) -> ProductState:
         logger.debug("PUBLISH_NOTION: Retrieved notion_pages_create tool")
     except RuntimeError as exc:
         logger.warning("PUBLISH_NOTION: Notion MCP unavailable: %s", exc)
+        # Log the LLM response (docs) when tool is not found
+        logger.info(
+            "PUBLISH_NOTION: Logging LLM response, not connecting to Notion MCP\n%s",
+            json.dumps(state.get("docs", {}), indent=2)[:10000],
+        )
         return {"phase": Phase.SPEC}
 
     logger.debug("PUBLISH_NOTION: Invoking notion_pages_create")

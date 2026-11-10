@@ -88,6 +88,11 @@ async def generate_tickets(state: ProductState) -> ProductState:
         logger.debug("GENERATE_TICKETS: Retrieved issueCreate tool from MCP")
     except RuntimeError as exc:
         logger.warning("GENERATE_TICKETS: Linear MCP unavailable: %s", exc)
+        # Log the LLM response (tickets) when tool is not found
+        logger.info(
+            "GENERATE_TICKETS: Logging LLM response, not connecting to Linear MCP\n%s",
+            json.dumps(tickets, indent=2)[:10000],
+        )
 
     if issue_create:
         logger.debug("GENERATE_TICKETS: Creating %d issues in Linear", len(tickets))

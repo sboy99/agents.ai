@@ -46,6 +46,12 @@ async def _main(verbose: bool = False):
             "aiosqlite",
         ):
             logging.getLogger(noisy).setLevel(logging.WARNING)
+    else:
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+            stream=sys.stderr,
+        )
 
     tid = uuid.uuid4().hex
     idea = input("Paste your idea: ")
