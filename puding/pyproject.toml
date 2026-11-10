@@ -20,7 +20,7 @@ dependencies = [
 ]
 
 [project.scripts]
-puding = "src.puding:main"
+puding = "src.puding.cli:main"
 server = "src.puding.server:main"
 
 [tool.uv.build-backend]
@@ -35,6 +35,4 @@ requires = ["uv_build>=0.12.18,<0.13.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dev = [
-    "pytest>=9.2.0",
-]
+dev = ["pytest>=9.2.0"]
