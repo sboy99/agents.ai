@@ -52,8 +52,9 @@ def main() -> None:
     policy = policies_repo.search_policies(_query)
 
     if policy:
+        policy_text = "\n\n---\n\n".join(policy)
         response = ai.chat(
-            f"Based on the following policy, answer the question: {_query}\n\nPolicy: {policy}"
+            f"Based on the following policy, answer the question: {_query}\n\nPolicy: {policy_text}"
         )
         logger.info(response)
     else:

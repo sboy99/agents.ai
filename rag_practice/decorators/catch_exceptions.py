@@ -1,10 +1,11 @@
 import functools
 from collections.abc import Callable
+from typing import Any
 
 from lib import Logger
 
 
-def catch_exceptions(on_exception: Callable | None = None):
+def catch_exceptions(on_exception: Callable[[Exception], Any] | None = None):
     """
     A decorator to handle exceptions in a function.
 
@@ -18,8 +19,8 @@ def catch_exceptions(on_exception: Callable | None = None):
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-            except Exception as e:
-                if on_exception:
+            except Exception as e:  # noqa: BLE001
+                if on_exception is not None:
                     on_exception(e)
                 else:
                     logger.error(f"Something went wrong in {func.__name__}: {e}")

@@ -1,0 +1,25 @@
+[project]
+name = "langgraph-practice"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "sboy99", email = "shadowboy191@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "langchain>=1.4.7",
+    "langchain-google-genai>=4.4.2",
+    "langchain-openai>=1.7.2",
+    "langgraph>=1.2.16",
+    "langsmith>=0.14.12",
+    "notebook>=7.6.3",
+    "python-dotenv>=1.2.4",
+]
+
+[project.scripts]
+langgraph-practice = "langgraph_practice:main"
+
+[build-system]
+requires = ["uv_build>=0.12.18,<0.13.0"]
+build-backend = "uv_build"
