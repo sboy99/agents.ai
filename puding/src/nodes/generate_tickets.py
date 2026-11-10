@@ -96,18 +96,18 @@ async def generate_tickets(state: ProductState) -> ProductState:
 
     if issue_create:
         logger.debug("GENERATE_TICKETS: Creating %d issues in Linear", len(tickets))
-        for t in tickets:
+        for ticket in tickets:
             try:
                 await issue_create.ainvoke(
-                    {"title": t["title"], "description": t["prd"]}
+                    {"title": ticket["title"], "description": ticket["prd"]}
                 )
                 logger.debug(
-                    "GENERATE_TICKETS: Created Linear issue %s", t["identifier"]
+                    "GENERATE_TICKETS: Created Linear issue %s", ticket["identifier"]
                 )
             except (RuntimeError, ToolException, ValueError) as exc:
                 logger.warning(
                     "GENERATE_TICKETS: Linear create failed for %s: %s",
-                    t["identifier"],
+                    ticket["identifier"],
                     exc,
                 )
 

@@ -13,7 +13,7 @@ _pkce_states: dict[str, tuple[str, str]] = {}
 
 
 def _oauth_for(server: str) -> OAuthClient:
-    meta = {}  # cached at boot (see note below)
+    meta: dict = {}  # cached at boot (see note below)
     return OAuthClient(server, meta)
 
 
